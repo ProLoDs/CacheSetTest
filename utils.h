@@ -25,3 +25,5 @@ int in_same_cache_setl2(uint64_t virt1, uint64_t virt2);
 uint64_t get_cacheset_identifier(uint64_t  addr);
 uint64_t rdtsc();
 void init_pagemap();
+uint64_t rdtsc_begin();
+uint64_t rdtsc_end();

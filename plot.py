@@ -2,10 +2,11 @@ import struct
 import statistics as s
 
 data=[[] for x in xrange(2)]
-x = []
+flush = []
+no_flush = []
 y= []
-def readChunks():
-    with open("Debug/out.bin") as infile:
+def readChunks(filename):
+    with open(filename) as infile:
         while True:
             data = infile.read(8)
             if not data:
@@ -20,16 +21,12 @@ def inc():
         a+=1
         yield a
 
-for num,delay in zip(inc(),readChunks()):
-    x.append(delay)
-    
-flush = x[:len(x)/2]
-no_flush = x[len(x)/2:]
-if False:
-    if delay < 4000:
-        data[num % 2].append((num % 2,delay))
-        x.append(num % 5)
-        y.append(delay)
+for num,delay in zip(inc(),readChunks("Debug/out0.bin")):
+    no_flush.append(delay)
+
+
+for num,delay in zip(inc(),readChunks("Debug/out1.bin")):
+    flush.append(delay)
     
 
 print "median:"

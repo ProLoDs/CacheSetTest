@@ -9,6 +9,38 @@
 #include <unistd.h>
 #include <assert.h>
 #include <fcntl.h>
+
+
+uint64_t rdtsc_begin() {
+  uint64_t a, d;
+  asm volatile ("mfence\n\t"
+    "CPUID\n\t"
+    "RDTSCP\n\t"
+    "mov %%rdx, %0\n\t"
+    "mov %%rax, %1\n\t"
+    "mfence\n\t"
+    : "=r" (d), "=r" (a)
+    :
+    : "%rax", "%rbx", "%rcx", "%rdx");
+  a = (d<<32) | a;
+  return a;
+}
+
+uint64_t rdtsc_end() {
+  uint64_t a, d;
+  asm volatile("mfence\n\t"
+    "RDTSCP\n\t"
+    "mov %%rdx, %0\n\t"
+    "mov %%rax, %1\n\t"
+    "CPUID\n\t"
+    "mfence\n\t"
+    : "=r" (d), "=r" (a)
+    :
+    : "%rax", "%rbx", "%rcx", "%rdx");
+  a = (d<<32) | a;
+  return a;
+}
+
 int g_pagemap_fd = -1;
 void init_pagemap() {
 	g_pagemap_fd = open("/proc/self/pagemap", O_RDONLY);
@@ -43,17 +75,19 @@ uint64_t get_physical_addr(uint64_t virtual_addr) {
 }
 uint64_t get_cacheset_identifier(uint64_t  addr)
 {
-	addr = get_physical_addr(addr);
+//	addr = get_physical_addr(addr);
 	return (addr & SETMASK);
 }
 int in_same_cache_setl2(uint64_t virt1, uint64_t virt2)
 {
-	virt1 = get_physical_addr(virt1);
-	virt2 = get_physical_addr(virt2);
+//	virt1 = get_physical_addr(virt1);
+//	virt2 = get_physical_addr(virt2);
 	//return virt1 == virt2;
 	//If L2 uses simple addressing, cache sets might be seen
 	//as 512 cache sets * 64byte cache lines. Thus L2 might use
 	//the bottom 15 virtual address bits to determine L2 CS.
 	return ((virt1 & SETMASK) == (virt2 & SETMASK));
 }
+
+
 

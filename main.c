@@ -78,9 +78,11 @@ void print_cache_sets()
 		}
 	}
 }
-void log_to_file(size_t *measurement  )
+void log_to_file(size_t *measurement  ,int flush)
 {
-	FILE *f = fopen("out.bin", "w");
+	char buf [9];
+	sprintf(buf,"out%d.bin",flush);
+	FILE *f = fopen(buf, "w");
 	if (f == NULL)
 	{
 	    printf("Error opening file!\n");
@@ -100,7 +102,7 @@ size_t flush_reload(int cacheset,int cachelines, int flush)
 		*cache_sets[cacheset][(cachelines+13) % 25];
 		*cache_sets[cacheset][(cachelines+14) % 25];
 	}
-	size_t time = rdtsc();
+	size_t time = rdtsc_begin();
 
 
 		*cache_sets[cacheset][cachelines];
@@ -109,7 +111,7 @@ size_t flush_reload(int cacheset,int cachelines, int flush)
 		*cache_sets[cacheset][cachelines + 3];
 		*cache_sets[cacheset][cachelines + 4];
 
-	size_t delta = rdtsc() - time;
+	size_t delta = rdtsc_end() - time;
 	return delta;
 }
 void do_measurements(int flush)
@@ -125,7 +127,7 @@ void do_measurements(int flush)
 			sched_yield();
 	}
 	printf("Done, writing output to log\n");
-	log_to_file(measurement);
+	log_to_file(measurement,flush);
 }
 void create_noise(int cacheset)
 {
