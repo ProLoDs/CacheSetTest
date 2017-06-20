@@ -108,14 +108,13 @@ size_t flush_reload(int cacheset,int cachelines, int flush)
 	size_t delta = rdtsc() - time;
 	return delta;
 }
-void do_measurements()
+void do_measurements(int flush)
 {
-	size_t * measurement =  malloc(MAX_MEASUREMENT_VALUE * sizeof(size_t));
+	size_t * measurement =  malloc(MAX_MEASUREMENT_VALUE * sizeof(size_t) );
 	int current_line= 0;
 	for (int idx = 0;idx<MAX_MEASUREMENT_VALUE;idx++){
 
-		measurement[idx] = flush_reload(idx % CACHESETS,current_line,idx % 2);
-		//printf("Pointer %p \n", (void *)get_cacheset_identifier((uint64_t)cache_sets[idx % CACHESETS][current_line]));
+		measurement[idx] = flush_reload(idx % CACHESETS,current_line,flush);
 		current_line = (current_line + 5) % ADDR_COUNT;
 		if(idx % 5 == 0)
 			sched_yield();
@@ -147,7 +146,8 @@ int main(int argc, char *argv[])
     if (pid == 0)
     {
     	printf("Child process\n");
-    	do_measurements();
+    	do_measurements(1);
+    	do_measurements(0);
     }
     else
     {
