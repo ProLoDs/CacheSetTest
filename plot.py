@@ -5,7 +5,7 @@ data=[[] for x in xrange(2)]
 x = []
 y= []
 def readChunks():
-    with open("out.bin") as infile:
+    with open("Debug/out.bin") as infile:
         while True:
             data = infile.read(8)
             if not data:
@@ -32,7 +32,10 @@ if False:
         y.append(delay)
     
 
-
+print "median:"
+print "flush",s.median(flush)
+print "no flush",s.median(no_flush)
+print "mean:"
 print "flush",s.mean(flush)
 print "no flush",s.mean(no_flush)
     

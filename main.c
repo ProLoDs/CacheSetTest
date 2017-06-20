@@ -15,7 +15,7 @@
 #include <sched.h>
 volatile uint64_t * cache_sets [CACHESETS][ADDR_COUNT];
 
-uint64_t eviction[MB * 4];
+uint64_t eviction[MB * 16];
 
 
 /*
@@ -29,10 +29,10 @@ void init_evition_array()
 	}
 }
 
-uint32_t init_cache_sets ()
+uint64_t init_cache_sets ()
 {
 
-	uint32_t ctr = 1;
+	uint64_t ctr = 1;
 	cache_sets[0][0] = &eviction[0];
 	// Step 1 get 5 different cache sets
 	for(int idx  = 1;idx < CACHESETS ; )
@@ -49,7 +49,7 @@ uint32_t init_cache_sets ()
 	printf("Pointer %p \n", (void *)get_cacheset_identifier((uint64_t)cache_sets[4][0]));
 	return ctr;
 }
-void fill_cache_lines(uint32_t pos)
+void fill_cache_lines(uint64_t pos)
 {
 	for (int cacheset = 0; cacheset < CACHESETS;cacheset++ )
 	{
@@ -58,6 +58,10 @@ void fill_cache_lines(uint32_t pos)
 			if (in_same_cache_setl2((uint64_t) &eviction[pos],(uint64_t)cache_sets[cacheset][0]))
 			{
 				cache_sets[cacheset][line++] = &eviction[pos];
+			}
+			if(pos > MB * 8){
+				printf("not enough addresses found\n");
+				exit(-1);
 			}
 			pos++;
 		}
@@ -110,6 +114,7 @@ size_t flush_reload(int cacheset,int cachelines, int flush)
 }
 void do_measurements(int flush)
 {
+
 	size_t * measurement =  malloc(MAX_MEASUREMENT_VALUE * sizeof(size_t) );
 	int current_line= 0;
 	for (int idx = 0;idx<MAX_MEASUREMENT_VALUE;idx++){
@@ -137,27 +142,31 @@ void create_noise(int cacheset)
 
 int main(int argc, char *argv[])
 {
-	pid_t pid;
+	init_pagemap();
+//	pid_t pid;
     init_evition_array();
     uint32_t pos = init_cache_sets();
     fill_cache_lines(pos);
     //print_cache_sets();
-    pid = fork();
-    if (pid == 0)
-    {
+//    pid = fork();
+//    if (pid == 0)
+//    {
     	printf("Child process\n");
+    	init_pagemap();
+    	printf("starting Measurement1\n");
     	do_measurements(1);
+    	printf("starting Measurement2\n");
     	do_measurements(0);
-    }
-    else
-    {
-    	printf("Parent process\n");
-    	int status;
-    	while (waitpid(pid, &status, WNOHANG) == 0)
-    	{
-    		//create_noise(2);
-    	}
-    }
+//    }
+//    else
+//    {
+//    	printf("Parent process\n");
+//    	int status;
+//    	while (waitpid(pid, &status, WNOHANG) == 0)
+//    	{
+//    		//create_noise(2);
+//    	}
+//    }
     printf("Done!");
     return 0;
 }
