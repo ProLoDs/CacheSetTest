@@ -1,5 +1,6 @@
 import struct
 import statistics as s
+import sys
 
 data=[[] for x in xrange(2)]
 flush = []
@@ -21,11 +22,18 @@ def inc():
         a+=1
         yield a
 
-for num,delay in zip(inc(),readChunks("Debug/out0.bin")):
+if len(sys.argv) > 2:
+    file1 = sys.argv[1]
+    file2 = sys.argv[2]
+else:
+    print "Usage: plot.py <noflushfile> <flushfile>"
+    sys.exit(0)
+
+for num,delay in zip(inc(),readChunks(file1)):
     no_flush.append(delay)
 
 
-for num,delay in zip(inc(),readChunks("Debug/out1.bin")):
+for num,delay in zip(inc(),readChunks(file2)):
     flush.append(delay)
     
 

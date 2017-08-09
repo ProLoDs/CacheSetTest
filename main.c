@@ -17,6 +17,7 @@ volatile uint64_t * cache_sets [CACHESETS][ADDR_COUNT];
 
 uint64_t eviction[MB * 16];
 
+#define TAG(X) (((uint64_t) X &(((uint64_t) 1<<21)-1))>>15)
 
 /*
  * Inits global eviction array
@@ -51,13 +52,23 @@ uint64_t init_cache_sets ()
 }
 void fill_cache_lines(uint64_t pos)
 {
+	int newTag = 0;
 	for (int cacheset = 0; cacheset < CACHESETS;cacheset++ )
 	{
 		for (int line = 1;line < ADDR_COUNT;)
 		{
 			if (in_same_cache_setl2((uint64_t) &eviction[pos],(uint64_t)cache_sets[cacheset][0]))
 			{
-				cache_sets[cacheset][line++] = &eviction[pos];
+				newTag = 1;
+				for(int i = 0; i < line; i++){
+                                    if(TAG(&eviction[pos]) == TAG(cache_sets[cacheset][i])){
+                                        newTag = 0; 
+                                        break;
+                                    }
+                                }
+				if(newTag == 1){
+				   cache_sets[cacheset][line++] = &eviction[pos];
+                                }
 			}
 			if(pos > MB * 8){
 				printf("not enough addresses found\n");
@@ -74,7 +85,7 @@ void print_cache_sets()
 		printf("Cache Set:%d\n",cacheset );
 		for (int line = 1;line < ADDR_COUNT;line++)
 		{
-			printf("Pointer %p \n", (void *)get_cacheset_identifier((uint64_t)cache_sets[cacheset][line]));
+			printf("Pointer %p %p \n", cache_sets[cacheset][line], (void *)get_cacheset_identifier((uint64_t)cache_sets[cacheset][line]));
 		}
 	}
 }
@@ -101,6 +112,9 @@ size_t flush_reload(int cacheset,int cachelines, int flush)
 		*cache_sets[cacheset][(cachelines+12) % 25];
 		*cache_sets[cacheset][(cachelines+13) % 25];
 		*cache_sets[cacheset][(cachelines+14) % 25];
+		*cache_sets[cacheset][(cachelines+15) % 25];
+		*cache_sets[cacheset][(cachelines+16) % 25];
+		*cache_sets[cacheset][(cachelines+17) % 25];
 	}
 	size_t time = rdtsc_begin();
 
@@ -123,8 +137,8 @@ void do_measurements(int flush)
 
 		measurement[idx] = flush_reload(idx % CACHESETS,current_line,flush);
 		current_line = (current_line + 5) % ADDR_COUNT;
-		if(idx % 5 == 0)
-			sched_yield();
+		//if(idx % 5 == 0)
+			//sched_yield();
 	}
 	printf("Done, writing output to log\n");
 	log_to_file(measurement,flush);
@@ -149,7 +163,7 @@ int main(int argc, char *argv[])
     init_evition_array();
     uint32_t pos = init_cache_sets();
     fill_cache_lines(pos);
-    //print_cache_sets();
+    print_cache_sets();
 //    pid = fork();
 //    if (pid == 0)
 //    {

@@ -75,13 +75,13 @@ uint64_t get_physical_addr(uint64_t virtual_addr) {
 }
 uint64_t get_cacheset_identifier(uint64_t  addr)
 {
-	addr = get_physical_addr(addr);
-	return (addr & SETMASK);
+	//addr = get_physical_addr(addr);
+	return (addr & SETMASK)>>6;
 }
 int in_same_cache_setl2(uint64_t virt1, uint64_t virt2)
 {
-	virt1 = get_physical_addr(virt1);
-	virt2 = get_physical_addr(virt2);
+	//virt1 = get_physical_addr(virt1);
+	//virt2 = get_physical_addr(virt2);
 	//If L2 uses simple addressing, cache sets might be seen
 	//as 512 cache sets * 64byte cache lines. Thus L2 might use
 	//the bottom 15 virtual address bits to determine L2 CS.
